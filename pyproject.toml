@@ -11,6 +11,7 @@ click = "^8.1.7"
 aiohttp = {version = "^3.9.5", extras = ["speedups"]}
 python-dotenv = "^1.0.1"
 tqdm = "^4.66.2"
+pandas = "^2.2.2"
 
 [build-system]
 requires = ["poetry-core"]
