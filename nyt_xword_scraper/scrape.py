@@ -11,12 +11,13 @@ import pandas as pd
 from dotenv import load_dotenv
 from tqdm.asyncio import tqdm
 
-from .puzzles import fetch_puzzle_data, fetch_puzzle_detail
+from nyt_xword_scraper.puzzles import fetch_puzzle_data, fetch_puzzle_detail
 
 load_dotenv()
 
 API_ROOT = "http://www.nytimes.com"
-COOKIE_PING = "/crosswords"
+COOKIE_PING = "/svc/crosswords/v6/game/21830.json"
+ENV_COOKIE_NAME = "NYT_COOKIE"
 
 HOST_LIMIT = 20
 MAX_RETRIES = 3
@@ -71,7 +72,7 @@ async def _scrape(batches, puzzle_type):
         API_ROOT,
         raise_for_status=True,
         connector=aiohttp.TCPConnector(limit_per_host=HOST_LIMIT),
-        cookies={"NYT-S": os.getenv("NYT_COOKIE")},
+        cookies={"NYT-S": os.environ[ENV_COOKIE_NAME]},
     ) as session:
         await session.get(COOKIE_PING)
 
@@ -112,6 +113,11 @@ def main(
         end_date (str, optional): last publication day. Defaults to today.
         file_output (str, optional): file to save results to. Defaults to "./puzzle_times.pkl".
     """
+    try:
+        os.environ[ENV_COOKIE_NAME]
+    except KeyError:
+        raise aiohttp.ClientError("NYT login cookie not detected in the enviornment.")
+
     start_datetime = datetime.strptime(start_date, DATE_FORMAT)
 
     if start_datetime < START_DATES[puzzle_type]:
