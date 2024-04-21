@@ -31,4 +31,4 @@ repos:
     -   id: doctoc
         args:
         -  --github
-           --maxlevel=2
+        -  --maxlevel=2
