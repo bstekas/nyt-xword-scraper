@@ -1,13 +1,18 @@
 [tool.poetry]
 name = "nyt-xword-scraper"
 version = "0.1.0"
-description = ""
+description = "Scrape personal puzzle solve times and streaks from the NYT Crosswords."
 authors = ["Barbara Stekas <bstekas@gmail.com>"]
 readme = "README.md"
+packages = [{include = "nyt_xword_scraper"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-
+click = "^8.1.7"
+aiohttp = {version = "^3.9.5", extras = ["speedups"]}
+python-dotenv = "^1.0.1"
+tqdm = "^4.66.2"
+pandas = "^2.2.2"
 
 [build-system]
 requires = ["poetry-core"]
