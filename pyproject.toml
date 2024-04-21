@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Scrape personal puzzle solve times and streaks from the NYT Crosswords."
 authors = ["Barbara Stekas <bstekas@gmail.com>"]
 readme = "README.md"
+packages = [{include = "nyt_xword_scraper"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
