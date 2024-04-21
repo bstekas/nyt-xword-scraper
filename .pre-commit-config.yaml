@@ -29,3 +29,6 @@ repos:
     rev: v2.2.0
     hooks:
     -   id: doctoc
+        args:
+        -  --github
+           --maxlevel=2
