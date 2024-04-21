@@ -100,7 +100,7 @@ async def _run_batch(puzzle_data, session, puzzle_type, batch_start, batch_end):
     pass
 
 
-def main(
+def scrape(
     puzzle_type: Literal["daily", "mini", "bonus"] = "daily",
     start_date: str = (datetime.today() - timedelta(days=2)).strftime(DATE_FORMAT),
     end_date: str = datetime.today().strftime(DATE_FORMAT),
@@ -111,7 +111,6 @@ def main(
         puzzle_type (Literal['daily', 'mini', 'bonus'], optional): type of puzzle. Defaults to "daily".
         start_date (str, optional): first publication day. Defaults to 2 days ago.
         end_date (str, optional): last publication day. Defaults to today.
-        file_output (str, optional): file to save results to. Defaults to "./puzzle_times.pkl".
     """
     try:
         os.environ[ENV_COOKIE_NAME]
@@ -138,7 +137,10 @@ if __name__ == "__main__":
     puzzle_type = "daily"
     fname = f"./data/{puzzle_type}_puzzle_times.json"
 
-    puzzle_data = main(puzzle_type=puzzle_type)
+    if not os.path.exists(os.path.dirname(fname)):
+        os.makedirs(os.path.dirname(fname))
+
+    puzzle_data = scrape(puzzle_type=puzzle_type)
 
     with open(fname, "w") as f:
         json.dump(puzzle_data, f)
