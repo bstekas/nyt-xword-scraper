@@ -67,7 +67,7 @@ async def fetch_puzzle_detail(session: aiohttp.ClientSession, puzzle: dict):
         return puzzle
 
 
-def parse_board_cells(board, fill_blank: tuple[str, int] = None) -> Dict[str, list]:
+def parse_board_cells(board, fill_blank=None) -> Dict[str, list]:
     """Transform puzzle board data when available.
 
     Args:
