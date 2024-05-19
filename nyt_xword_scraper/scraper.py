@@ -3,6 +3,7 @@
 import asyncio
 import json
 import os
+from collections.abc import Iterator
 from datetime import datetime, timedelta
 from typing import Literal
 
@@ -17,7 +18,7 @@ load_dotenv()
 
 API_ROOT = "http://www.nytimes.com"
 COOKIE_PING = "/svc/crosswords/v6/game/21830.json"
-ENV_COOKIE_NAME = "NYT_COOKIE"
+ENV_COOKIE = os.environ["NYT_COOKIE"]
 
 HOST_LIMIT = 20
 MAX_RETRIES = 3
@@ -32,7 +33,9 @@ START_DATES = {
 }
 
 
-def _get_batch_ends(puzzle_type: str, start_date: str, end_date: str):
+def _get_batch_ends(
+    puzzle_type: str, start_date: str, end_date: str
+) -> tuple[Iterator[tuple[str, str]], int]:
     """Get start and end dates for each batch.
 
     For daily and mini, each batch is one calendar month. For bonus, one calendar year.
@@ -64,7 +67,7 @@ def _get_batch_ends(puzzle_type: str, start_date: str, end_date: str):
     return zip(m_start, m_end), len(m_start)
 
 
-async def _scrape(batches, puzzle_type):
+async def _scrape(batches: Iterator[tuple[str, str]], puzzle_type: str, token: str):
     """Run asynchronous scrape for all batches."""
     puzzle_data = []
 
@@ -72,7 +75,7 @@ async def _scrape(batches, puzzle_type):
         API_ROOT,
         raise_for_status=True,
         connector=aiohttp.TCPConnector(limit_per_host=HOST_LIMIT),
-        cookies={"NYT-S": os.environ[ENV_COOKIE_NAME]},
+        cookies={"NYT-S": token},
     ) as session:
         await session.get(COOKIE_PING)
 
@@ -86,7 +89,13 @@ async def _scrape(batches, puzzle_type):
     return puzzle_data
 
 
-async def _run_batch(puzzle_data, session, puzzle_type, batch_start, batch_end):
+async def _run_batch(
+    puzzle_data: list,
+    session: aiohttp.ClientSession,
+    puzzle_type: str,
+    batch_start: str,
+    batch_end: str,
+):
     """Run a single batch of puzzles between two dates."""
     info = await fetch_puzzle_data(session, puzzle_type, batch_start, batch_end)
 
@@ -101,22 +110,19 @@ async def _run_batch(puzzle_data, session, puzzle_type, batch_start, batch_end):
 
 
 def scrape(
-    puzzle_type: Literal["daily", "mini", "bonus"] = "daily",
+    token: str = ENV_COOKIE,
+    puzzle_type: str = "daily",
     start_date: str = (datetime.today() - timedelta(days=2)).strftime(DATE_FORMAT),
     end_date: str = datetime.today().strftime(DATE_FORMAT),
-) -> None:
+) -> list[dict]:
     """Asynchronously pull all available information for puzzles published between two dates.
 
     Args:
-        puzzle_type (Literal['daily', 'mini', 'bonus'], optional): type of puzzle. Defaults to "daily".
+        token (str, optional): Logged in users's NYT token.
+        puzzle_type (str, optional): type of puzzle. Can be 'daily', 'mini', or 'bonus'. Defaults to "daily".
         start_date (str, optional): first publication day. Defaults to 2 days ago.
         end_date (str, optional): last publication day. Defaults to today.
     """
-    try:
-        os.environ[ENV_COOKIE_NAME]
-    except KeyError:
-        raise aiohttp.ClientError("NYT login cookie not detected in the enviornment.")
-
     start_datetime = datetime.strptime(start_date, DATE_FORMAT)
 
     if start_datetime < START_DATES[puzzle_type]:
@@ -130,7 +136,7 @@ def scrape(
         )
     )
 
-    return asyncio.run(_scrape(batches, puzzle_type))
+    return asyncio.run(_scrape(batches, puzzle_type, token))
 
 
 if __name__ == "__main__":
