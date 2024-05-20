@@ -10,7 +10,7 @@ line-ending = "lf"
 skip-magic-trailing-comma = true
 
 [lint]
-select = ["I", "E", "D", "N", "ICN", "T20", "PT", "NPY"]
+select = ["I", "E", "D", "N", "ICN", "PT", "NPY"]
 ignore = ["D107", "D104", "E402"]
 
 [lint.per-file-ignores]
