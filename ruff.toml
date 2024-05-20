@@ -1,0 +1,24 @@
+cache-dir = "~/.cache/ruff"
+fix = true
+force-exclude = true
+line-length = 90
+output-format = "github"
+
+[format]
+docstring-code-format = true
+line-ending = "lf"
+skip-magic-trailing-comma = true
+
+[lint]
+select = ["I", "E", "D", "N", "ICN", "T20", "PT", "NPY"]
+ignore = ["D107", "D104", "E402"]
+
+[lint.per-file-ignores]
+"**/tests/**.py" = ["D"]
+
+[lint.isort]
+split-on-trailing-comma = false
+
+[lint.pydocstyle]
+convention = "google"
+ignore-decorators = [".*"]
