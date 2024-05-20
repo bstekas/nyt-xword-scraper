@@ -1,20 +1,15 @@
 """Scrape crossword solve times asynchronously."""
 
 import asyncio
-import json
 import os
 from collections.abc import Iterator
 from datetime import datetime, timedelta
-from typing import Literal
 
 import aiohttp
 import pandas as pd
-from dotenv import load_dotenv
 from tqdm.asyncio import tqdm
 
 from nyt_xword_scraper.puzzles import fetch_puzzle_data, fetch_puzzle_detail
-
-load_dotenv()
 
 API_ROOT = "http://www.nytimes.com"
 COOKIE_PING = "/svc/crosswords/v6/game/21830.json"
@@ -110,16 +105,17 @@ async def _run_batch(
 
 
 def scrape(
-    token: str = ENV_COOKIE,
+    token: str,
     puzzle_type: str = "daily",
     start_date: str = (datetime.today() - timedelta(days=2)).strftime(DATE_FORMAT),
     end_date: str = datetime.today().strftime(DATE_FORMAT),
 ) -> list[dict]:
-    """Asynchronously pull all available information for puzzles published between two dates.
+    """Pull all available information for puzzles published between two dates.
 
     Args:
         token (str, optional): Logged in users's NYT token.
-        puzzle_type (str, optional): type of puzzle. Can be 'daily', 'mini', or 'bonus'. Defaults to "daily".
+        puzzle_type (str, optional): type of puzzle. Can be 'daily', 'mini', or 'bonus'.
+            Defaults to "daily".
         start_date (str, optional): first publication day. Defaults to 2 days ago.
         end_date (str, optional): last publication day. Defaults to today.
     """
@@ -137,18 +133,3 @@ def scrape(
     )
 
     return asyncio.run(_scrape(batches, puzzle_type, token))
-
-
-if __name__ == "__main__":
-    puzzle_type = "daily"
-    fname = f"./data/{puzzle_type}_puzzle_times.json"
-
-    if not os.path.exists(os.path.dirname(fname)):
-        os.makedirs(os.path.dirname(fname))
-
-    puzzle_data = scrape(puzzle_type=puzzle_type)
-
-    with open(fname, "w") as f:
-        json.dump(puzzle_data, f)
-
-    print(f"{len(puzzle_data)} puzzle times saved to {fname}")
