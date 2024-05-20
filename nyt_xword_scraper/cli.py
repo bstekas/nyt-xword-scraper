@@ -4,23 +4,45 @@ import os
 from datetime import datetime, timedelta
 
 import click
+import dotenv
 import pandas as pd
 
 from nyt_xword_scraper.scraper import DATE_FORMAT, scrape
 
 # from nyt_xword_scraper.streaks import fetch_stats_streaks
 
+dotenv.load_dotenv()
+
 
 @click.group()
 @click.option(
-    "-f", "--filepath", type=click.Path(dir_okay=True, writable=True), default="./data/"
+    "-t",
+    "--token",
+    type=str,
+    default=lambda: os.environ.get("NYT_COOKIE"),
+    help="Logged in users's NYT token. Inferred from environment or .env if missing.",
 )
-@click.option("--json", "filetype", flag_value="json", default=True)
-@click.option("--csv", "filetype", flag_value="csv")
+@click.option(
+    "-f",
+    "--filepath",
+    type=click.Path(dir_okay=True, writable=True),
+    default="./data/",
+    help="File or folder to save results to.",
+    show_default=True,
+)
+@click.option(
+    "--json",
+    "filetype",
+    flag_value="json",
+    default=True,
+    help="Save output as JSON.  [default]",
+)
+@click.option("--csv", "filetype", flag_value="csv", help="Save output as CSV.")
 @click.pass_context
-def cli(ctx, filepath, filetype):
+def cli(ctx, token, filepath, filetype):
     """Scrape personal puzzle solve times and streaks from the NYT Crosswords."""
     ctx.obj = {}
+    ctx.obj["TOKEN"] = token
     ctx.obj["filetype"] = filetype
     ctx.obj["filepath"] = filepath
     pass
@@ -32,24 +54,32 @@ def cli(ctx, filepath, filetype):
     "--puzzle-type",
     type=click.Choice(["daily", "mini", "bonus"]),
     default="daily",
+    help="Type of puzzle to get times for.",
 )
 @click.option(
     "-s",
     "--start-date",
     # type=click.DateTime([DATE_FORMAT]),
     default=(datetime.today() - timedelta(days=7)).strftime(DATE_FORMAT),
+    help=f"First date to begin scraping from.",
+    show_default=True,
 )
 @click.option(
     "-e",
     "--end-date",
     # type=click.DateTime([DATE_FORMAT]),
     default=datetime.today().strftime(DATE_FORMAT),
+    help=f"End date for scraping.",
+    show_default=True,
 )
 @click.pass_context
 def solve_times(ctx, puzzle_type, start_date, end_date):
     """Scrape personal puzzle solve times the NYT Crosswords."""
     puzzles_data = scrape(
-        puzzle_type=puzzle_type, start_date=start_date, end_date=end_date
+        ctx.obj["TOKEN"],
+        puzzle_type=puzzle_type,
+        start_date=start_date,
+        end_date=end_date,
     )
     filename = f"{puzzle_type}_puzzle_times"
     _write_output(
