@@ -7,9 +7,12 @@ from datetime import datetime, timedelta
 
 import aiohttp
 import pandas as pd
+from dotenv import load_dotenv
 from tqdm.asyncio import tqdm
 
 from nyt_xword_scraper.puzzles import fetch_puzzle_data, fetch_puzzle_detail
+
+load_dotenv()
 
 API_ROOT = "http://www.nytimes.com"
 COOKIE_PING = "/svc/crosswords/v6/game/21830.json"
@@ -105,7 +108,7 @@ async def _run_batch(
 
 
 def scrape(
-    token: str,
+    token: str = ENV_COOKIE,
     puzzle_type: str = "daily",
     start_date: str = (datetime.today() - timedelta(days=2)).strftime(DATE_FORMAT),
     end_date: str = datetime.today().strftime(DATE_FORMAT),
